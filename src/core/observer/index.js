@@ -41,12 +41,15 @@ export class Observer {
     this.value = value
     this.dep = new Dep()
     this.vmCount = 0
+    // 把实例挂载到value的__ob__下
     def(value, '__ob__', this)
     if (Array.isArray(value)) {
       const augment = hasProto
         ? protoAugment
         : copyAugment
+        // 强行实现继承,增加数组方法.
       augment(value, arrayMethods, arrayKeys)
+      // 和下面的walk一样 对每个属性进行观察
       this.observeArray(value)
     } else {
       this.walk(value)
@@ -59,6 +62,7 @@ export class Observer {
    * value type is Object.
    */
   walk (obj: Object) {
+    // 遍历要观察的数据 对每个数据定义关联
     const keys = Object.keys(obj)
     for (let i = 0; i < keys.length; i++) {
       defineReactive(obj, keys[i], obj[keys[i]])
@@ -69,6 +73,7 @@ export class Observer {
    * Observe a list of Array items.
    */
   observeArray (items: Array<any>) {
+    // 遍历每个数组 对他进行观察
     for (let i = 0, l = items.length; i < l; i++) {
       observe(items[i])
     }
@@ -109,6 +114,7 @@ export function observe (value: any, asRootData: ?boolean): Observer | void {
     return
   }
   let ob: Observer | void
+  // 如果已经是被观察的状态
   if (hasOwn(value, '__ob__') && value.__ob__ instanceof Observer) {
     ob = value.__ob__
   } else if (
@@ -147,10 +153,13 @@ export function defineReactive (
   const getter = property && property.get
   const setter = property && property.set
 
+  // 观察对象获取Observer实例
   let childOb = !shallow && observe(val)
+  // 进行定义
   Object.defineProperty(obj, key, {
     enumerable: true,
     configurable: true,
+    // 定义getter
     get: function reactiveGetter () {
       const value = getter ? getter.call(obj) : val
       if (Dep.target) {
@@ -180,6 +189,7 @@ export function defineReactive (
         val = newVal
       }
       childOb = !shallow && observe(newVal)
+      // 通知更新
       dep.notify()
     }
   })

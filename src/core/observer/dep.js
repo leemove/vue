@@ -16,6 +16,7 @@ export default class Dep {
 
   constructor () {
     this.id = uid++
+    // subs是存放watcher的数组
     this.subs = []
   }
 
