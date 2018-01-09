@@ -163,8 +163,11 @@ export function defineReactive (
     get: function reactiveGetter () {
       const value = getter ? getter.call(obj) : val
       if (Dep.target) {
+        // 只有在dep.target有值得时候才是vue 收集依赖的时候
         dep.depend()
         if (childOb) {
+          // 这里有两次依赖,一次在闭包的dep中,一次在__ob__的dep中.
+          // 这里的dep主要是为了支持$set $delete等方法.
           childOb.dep.depend()
           if (Array.isArray(value)) {
             dependArray(value)
@@ -181,6 +184,7 @@ export function defineReactive (
       }
       /* eslint-enable no-self-compare */
       if (process.env.NODE_ENV !== 'production' && customSetter) {
+        // 提供一个报错的方法
         customSetter()
       }
       if (setter) {
@@ -210,11 +214,11 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
     target[key] = val
     return val
   }
-  const ob = (target: any).__ob__
+  const ob = (target: any)['__ob__']
+
   if (target._isVue || (ob && ob.vmCount)) {
     process.env.NODE_ENV !== 'production' && warn(
-      'Avoid adding reactive properties to a Vue instance or its root $data ' +
-      'at runtime - declare it upfront in the data option.'
+      'Avoid adding reactive properties to a Vue instance or its root $data ' + 'at runtime - declare it upfront in the data option.'
     )
     return val
   }
@@ -257,6 +261,7 @@ export function del (target: Array<any> | Object, key: any) {
  * Collect dependencies on array elements when the array is touched, since
  * we cannot intercept array element access like property getters.
  */
+
 function dependArray (value: Array<any>) {
   for (let e, i = 0, l = value.length; i < l; i++) {
     e = value[i]

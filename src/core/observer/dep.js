@@ -7,7 +7,7 @@ let uid = 0
 
 /**
  * A dep is an observable that can have multiple
- * directives subscribing to it.
+ * directives su bscribing to it.
  */
 export default class Dep {
   static target: ?Watcher;
@@ -29,6 +29,7 @@ export default class Dep {
   }
 
   depend () {
+    // 在watcher中添加自己
     if (Dep.target) {
       Dep.target.addDep(this)
     }
