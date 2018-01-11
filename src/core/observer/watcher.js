@@ -29,15 +29,15 @@ export default class Watcher {
   id: number;
   deep: boolean;
   user: boolean;
-  lazy: boolean;
-  sync: boolean;
-  dirty: boolean;
+  lazy: boolean; // 延迟加载
+  sync: boolean; // 同步加载
+  dirty: boolean;// 是否脏值 值是否已经改变
   active: boolean;
-  deps: Array<Dep>;
+  deps: Array<Dep>; // 依赖列表
   newDeps: Array<Dep>;
   depIds: SimpleSet;
   newDepIds: SimpleSet;
-  getter: Function;
+  getter: Function; // 真的是getter
   value: any;
 
   constructor (
@@ -87,6 +87,7 @@ export default class Watcher {
         )
       }
     }
+    // 一般情况下会在这里触发一次get方法从而收集依赖
     this.value = this.lazy
       ? undefined
       : this.get()
@@ -96,10 +97,12 @@ export default class Watcher {
    * Evaluate the getter, and re-collect dependencies.
    */
   get () {
+    // 设定当前wathcer为Dep.target
     pushTarget(this)
     let value
     const vm = this.vm
     try {
+      // 触发一次getter
       value = this.getter.call(vm, vm)
     } catch (e) {
       if (this.user) {
@@ -165,16 +168,18 @@ export default class Watcher {
     } else if (this.sync) {
       this.run()
     } else {
+      // 加入队列
       queueWatcher(this)
     }
   }
 
   /**
-   * Scheduler job interface.
+   * Scheduler job interface. 调度接口
    * Will be called by the scheduler.
    */
   run () {
     if (this.active) {
+      // 重新手机依赖
       const value = this.get()
       if (
         value !== this.value ||
@@ -187,6 +192,7 @@ export default class Watcher {
         // set new value
         const oldValue = this.value
         this.value = value
+        // 如果有用户定义的watcher
         if (this.user) {
           try {
             this.cb.call(this.vm, value, oldValue)
@@ -194,6 +200,7 @@ export default class Watcher {
             handleError(e, this.vm, `callback for watcher "${this.expression}"`)
           }
         } else {
+          // 执行回调 一般是更新视图
           this.cb.call(this.vm, value, oldValue)
         }
       }
